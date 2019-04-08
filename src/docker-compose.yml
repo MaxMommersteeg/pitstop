@@ -50,7 +50,6 @@ services:
       - "5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApplicationInsights:InstrumentationKey=${PitStopAIKey}
 
   customermanagementapi:
     image: pitstop/customermanagementapi:latest
@@ -62,7 +61,6 @@ services:
       - "5100"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApplicationInsights:InstrumentationKey=${PitStopAIKey}
 
   workshopmanagementapi:
     image: pitstop/workshopmanagementapi:latest
@@ -74,7 +72,6 @@ services:
       - "5200"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApplicationInsights:InstrumentationKey=${PitStopAIKey}
 
   auditlogservice:
     image: pitstop/auditlogservice:latest
@@ -83,7 +80,7 @@ services:
     depends_on:
       - rabbitmq
     environment:
-      - PITSTOP_ENVIRONMENT=Production
+      - DOTNET_ENVIRONMENT=Production
 
   invoiceservice:
     image: pitstop/invoiceservice:latest
@@ -94,7 +91,7 @@ services:
       - sqlserver
       - mailserver
     environment:
-      - PITSTOP_ENVIRONMENT=Production
+      - DOTNET_ENVIRONMENT=Production
 
   notificationservice:
     image: pitstop/notificationservice:latest
@@ -105,7 +102,7 @@ services:
       - sqlserver
       - mailserver
     environment:
-      - PITSTOP_ENVIRONMENT=Production
+      - DOTNET_ENVIRONMENT=Production
 
   timeservice:
     image: pitstop/timeservice:latest
@@ -114,7 +111,7 @@ services:
     depends_on:
       - rabbitmq
     environment:
-      - PITSTOP_ENVIRONMENT=Production
+      - DOTNET_ENVIRONMENT=Production
 
   workshopmanagementeventhandler:
     image: pitstop/workshopmanagementeventhandler:latest
@@ -124,7 +121,7 @@ services:
       - rabbitmq
       - sqlserver
     environment:
-      - PITSTOP_ENVIRONMENT=Production
+      - DOTNET_ENVIRONMENT=Production
 
   webapp:
     image: pitstop/webapp:latest
@@ -138,7 +135,6 @@ services:
       - "7000:7000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApplicationInsights:InstrumentationKey=${PitStopAIKey}
 
 volumes:
   sqlserverdata:

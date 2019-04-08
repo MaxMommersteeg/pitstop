@@ -3,9 +3,9 @@ kind: Deployment
 metadata:
   labels:
     system: pitstop
-    app: timeservice
-    version: v1
-  name: timeservice
+    app: customermanagementapi
+    version: v2
+  name: customermanagementapi-v2
   namespace: pitstop
 spec:
   replicas: 1
@@ -13,14 +13,16 @@ spec:
     metadata:
       labels:
         system: pitstop
-        app: timeservice
-        version: v1
+        app: customermanagementapi
+        version: v2
     spec:
       containers:
       - env:
-        - name: PITSTOP_ENVIRONMENT
+        - name: ASPNETCORE_ENVIRONMENT
           value: Production
-        image: pitstop/timeservice:latest
+        image: pitstop/customermanagementapi:v2
         imagePullPolicy: IfNotPresent
-        name: timeservice
+        name: customermanagementapi
+        ports:
+        - containerPort: 5100
       restartPolicy: Always

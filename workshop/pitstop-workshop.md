@@ -77,16 +77,16 @@ For this to work, you must have installed the Git client (see [Step 0.1](#step-0
 9. You will be asked to specify a folder for cloning the repo into. Select a folder and confirm. The repo will be cloned in this folder.
 10. When VS Code asks you to open the cloned repo, do that. Now you can start working with the repo.
 
-This would be a good time to walk through the solution and see what's in there. In the <a href="https://github.com/edwinvw/pitstop" target="_blank">README file</a> in the repo, you will find information about the solution structure. Read this until yout get to the *Getting Started* section.
+This would be a good time to walk through the solution and see what's in there. In the <a href="https://github.com/EdwinVW/pitstop/wiki" target="_blank">Wiki</a> of the repo, you can find an overview of the solution structure. 
 
 ### Step 1.2: Build the Docker images
-In order to build the Docker images, follow the instructions in the <a href="https://github.com/edwinvw/pitstop#building-the-docker-images" target="_blank">'Building the Docker images' section</a> in the repo's README file.
+In order to build the Docker images, follow the instructions in the <a href="https://github.com/EdwinVW/pitstop/wiki/Building%20the%20Docker%20images" target="_blank">'Building the Docker images' section</a> in the repo's Wiki.
 
 ### Step 1.3: Run the application
-In order to run the application, follow the instructions in the <a href="https://github.com/edwinvw/pitstop#starting-the-application" target="_blank">'Starting the application' section</a> in the repo's README file.
+In order to run the application, follow the instructions in the <a href="https://github.com/EdwinVW/pitstop/wiki/Run%20the%20application%20using%20using%20Docker%20Compose" target="_blank">'Starting the application' section</a> in the repo's Wiki.
 
 ### Step 1.4: Get to know the solution
-In order to get to know the functionality of the application, make sure you have read the introduction of the solution in the repo's README file up to the *Technology* section. After that follow the <a href="https://github.com/edwinvw/pitstop#testing-the-application" target="_blank">'Testing the application' section</a> in the repo's README file. 
+In order to get to know the functionality of the application, make sure you have read the introduction of the solution in the repo's README file up to the *Technology* section. After that follow the <a href="https://github.com/EdwinVW/pitstop/wiki/Testing%20the%20application" target="_blank">'Testing the application' section</a> in the repo's Wiki. 
 
 ---
 
@@ -153,11 +153,11 @@ You need to add a reference to the *PitStop.Infrastructure* nuget package. The p
 Follow the following steps to add a reference to the package: 
 
 1. Open the terminal window in Visual Studio Code using the *Terminal* menu.
-2. Type the following command in this window: `dotnet add package PitStop.Infrastructure`. 
+2. Type the following command in this window: `dotnet add package PitStop.Infrastructure.Messaging`. 
 3. In the .csproj file the following XML snippet will be added: 
    ```xml
    <ItemGroup>
-     <PackageReference Include="Pitstop.Infrastructure" Version="3.5.2" />
+     <PackageReference Include="Pitstop.Infrastructure.Messaging" Version="2.0.0" />
    </ItemGroup>
    ```
 4. Visual Studio Code will detect changes in the references and automatically restore the references.
@@ -181,7 +181,7 @@ Now you can start adding some business logic. First you need to add the definiti
 
 You need to define a C# class to hold this information. We will only use the *name* property in our code, so in your event-definition you can skip the other customer properties.
 
-The infrastructure package you referenced in the previous step contains an *Event* base-class for events. This base-class contains the *messageId* and *messageType* properties. For convenience, the infrastructure package also contains an *MessageTypes* enum with all the available message-types in the solution. 
+The infrastructure package you referenced in the previous step contains an *Event* base-class for events. This class inherits from the *Message* base-class which contains the *MessageId* and *MessageType* properties (the message-type is inferred from the name of the class).
 
 Follow the following steps to add the *CustomerRegistered* event-definition to your service:
 
@@ -199,7 +199,7 @@ Follow the following steps to add the *CustomerRegistered* event-definition to y
 	       public readonly string Name;
 	
 	       public CustomerRegistered(Guid messageId, string customerId, string name) : 
-	           base(messageId, MessageTypes.CustomerRegistered)
+	           base(messageId)
 	       {
 	           CustomerId = customerId;
 	           Name = name;
@@ -248,12 +248,12 @@ Execute the following steps to add the *CustomerManager* to your project:
 	            _messageHandler.Stop();
 	        }
 	
-	        public async Task<bool> HandleMessageAsync(MessageTypes messageType, string message)
+	        public async Task<bool> HandleMessageAsync(string messageType, string message)
 	        {
 	            JObject messageObject = MessageSerializer.Deserialize(message);
 	            switch (messageType)
 	            {
-	                case MessageTypes.CustomerRegistered:
+	                case "CustomerRegistered":
 	                    await HandleAsync(messageObject.ToObject<CustomerRegistered>());
 	                    break;
 	                default:
@@ -299,7 +299,7 @@ Now that you created a *CustomerManager* that can handle *CustomerRegistered* ev
 	        static void Main(string[] args)
 	        {
 	            // determine environment
-	            _env = Environment.GetEnvironmentVariable("PITSTOP_ENVIRONMENT") ?? "Development";
+	            _env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
 	
 	            // create rabbitmq message-handler
 	            string rabbitMQHost = (_env == "Development") ? "localhost" : "rabbitmq";
@@ -336,7 +336,7 @@ Now that you created a *CustomerManager* that can handle *CustomerRegistered* ev
 > 
 > Details to notice:
 > - We pass in the following arguments to the *RabbitMQMessageHandler* constructor: *host*, *username*, *password*, *exchange*, *queue*, *routing-key*. If the specified exchange or queue do not exist, they are automatically created.  
-> - Based on the environment we use a different RabbitMQ hostname and use a different approach to waiting for exit. Set the *PITSTOP_ENVIRONMENT* environment variable on your machine to deviate from the default (*Development*). When running in a Docker container later, the environment variable will automatically be set to *Production*.
+> - Based on the environment we use a different RabbitMQ hostname and use a different approach to waiting for exit. Set the *DOTNET_ENVIRONMENT* environment variable on your machine to deviate from the default (*Development*). When running in a Docker container later, the environment variable will automatically be set to *Production*.
 
 **Build the code**
 In order to check whether or not you made any mistakes until now, build the code. Do this by pressing `Ctrl-Shift-B` in Visual Studio Code and choosing the task *Build*. The output window should look like this:
@@ -382,7 +382,7 @@ Now that you have created a functional service, let's run it in a Docker contain
 	COPY --from=build-env /app/out .
 	
 	# Set environment variables
-	ENV PITSTOP_ENVIRONMENT=Production
+	ENV DOTNET_ENVIRONMENT=Production
 
 	# Start
 	ENTRYPOINT ["dotnet", "CustomerEventHandler.dll"]
@@ -396,7 +396,7 @@ Now that you have created a functional service, let's run it in a Docker contain
 > - After the restore, it copies the rest of the files to the working-folder and publishes the application by running `dotnet publish -c Release -o out`. It builds the *Release* configuration and outputs the result in the folder *out* within the working-folder.
 > - Now it starts the second phase which runs in a container based on the .NET Core run-time container (*microsoft/dotnet:2.1-runtime*). This container does not contain the entire .NET Core SDK - so it's much smaller.
 > - It then copies the output from the other build phase (that was called *build-env*) to the local folder within the container.
-> - It sets the *PITSTOP_ENVIRONMENT* environment-variable to *Production*.
+> - It sets the *DOTNET_ENVIRONMENT* environment-variable to *Production*.
 > - Finally is specifies the entry-point - the command to execute when the container starts. In this case it specifies the command `dotnet` and as argument the assembly that was created during the build. This will start the *CustomerEventHandler* console application you've created.
 
 Now you are going to build a Docker image using the Dockerfile.
@@ -442,7 +442,7 @@ The last step in this lab is to extend the docker-compose file to include your s
        depends_on:
          - rabbitmq
        environment:
-         - PITSTOP_ENVIRONMENT=Production    
+         - DOTNET_ENVIRONMENT=Production    
    ```
 3. Save the file.
 4. Open the Powershell window where you started the solution using `docker-compose up`.
